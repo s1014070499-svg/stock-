@@ -1,787 +1,4 @@
-document.getElementById(id + 'Score');
-            
-            if (slider && display) {
-                slider.addEventListener('input', function() {
-                    display.textContent = this.value;
-                    qualitativeScores[id] = parseInt(this.value);
-                    updateConfidenceLevel();
-                });
-            }
-        });
-        
-        // AI分析開關
-        document.getElementById('aiAnalysis').addEventListener('change', function() {
-            const insights = document.getElementById('aiInsights');
-            insights.style.display = this.checked ? 'block' : 'none';
-            if (this.checked) {
-                runAIAnalysis();
-            }
-        });
-        
-        // 動態權重調整
-        function updateDynamicWeights() {
-            if (!selectedIndustry || !selectedEnvironment) return;
-            
-            const config = enhancedIndustryConfigs[selectedIndustry];
-            if (!config) return;
-            
-            const environmentAdjustments = getEnvironmentAdjustments();
-            
-            const weightDisplay = document.querySelector('.dynamic-weights');
-            if (weightDisplay) {
-                weightDisplay.innerHTML = `
-                    ⚡ 動態權重調整：
-                    成長性 ${config.baseWeights.growth + environmentAdjustments.growth}% |
-                    盈利能力 ${config.baseWeights.profitability + environmentAdjustments.profitability}% |
-                    估值 ${config.baseWeights.valuation + environmentAdjustments.valuation}% |
-                    財務健康 ${config.baseWeights.health + environmentAdjustments.health}%
-                `;
-            }
-        }
-        
-        // 環境調整係數
-        function getEnvironmentAdjustments() {
-            const adjustments = { growth: 0, profitability: 0, valuation: 0, health: 0 };
-            
-            if (selectedEnvironment === 'bear') {
-                adjustments.health += 10;
-                adjustments.valuation += 5;
-                adjustments.growth -= 10;
-                adjustments.profitability -= 5;
-            } else if (selectedEnvironment === 'bull') {
-                adjustments.growth += 10;
-                adjustments.valuation -= 5;
-                adjustments.health -= 5;
-            } else if (selectedEnvironment === 'volatile') {
-                adjustments.health += 15;
-                adjustments.growth -= 10;
-                adjustments.valuation -= 5;
-            }
-            
-            return adjustments;
-        }
-        
-        // 生成增強模組
-        function generateEnhancedModules() {
-            if (!selectedIndustry) return;
-            
-            const config = enhancedIndustryConfigs[selectedIndustry];
-            if (!config) return;
-            
-            const moduleGrid = document.getElementById('moduleGrid');
-            moduleGrid.innerHTML = '';
-            
-            Object.keys(config.modules).forEach(moduleId => {
-                const module = config.modules[moduleId];
-                const moduleDiv = document.createElement('div');
-                moduleDiv.className = 'module';
-                moduleDiv.innerHTML = `
-                    <h3>
-                        ${module.name}
-                        <span class="weight-badge">${module.weight}%</span>
-                    </h3>
-                    <div class="score-display">
-                        <div class="score-circle score-average" id="score-${moduleId}">--</div>
-                    </div>
-                    <div class="indicator-list">
-                        <h4>量化指標:</h4>
-                        ${module.indicators.map(indicator => `
-                            <div class="indicator-item">
-                                <span>${indicator}:</span>
-                                <input type="number" 
-                                       placeholder="0-100" 
-                                       min="0" max="100" 
-                                       onchange="updateModuleScore('${moduleId}')"
-                                       data-indicator="${indicator}">
-                            </div>
-                        `).join('')}
-                        
-                        <h4>質化指標:</h4>
-                        ${module.qualitative.map(qual => `
-                            <div class="indicator-item">
-                                <span>${qual}:</span>
-                                <input type="range" 
-                                       min="0" max="100" value="50"
-                                       class="confidence-slider"
-                                       onchange="updateQualitativeScore('${moduleId}', '${qual}', this.value)">
-                                <span class="qual-score">50</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                moduleGrid.appendChild(moduleDiv);
-            });
-        }
-        
-        // 更新模組評分
-        function updateModuleScore(moduleId) {
-            const moduleDiv = document.querySelector(`#score-${moduleId}`).closest('.module');
-            const inputs = moduleDiv.querySelectorAll('input[type="number"]');
-            let total = 0;
-            let count = 0;
-            
-            inputs.forEach(input => {
-                if (input.value) {
-                    total += parseFloat(input.value);
-                    count++;
-                }
-            });
-            
-            // 加入質化評分
-            if (qualitativeScores[moduleId]) {
-                const qualScores = Object.values(qualitativeScores[moduleId]);
-                if (qualScores.length > 0) {
-                    const qualAvg = qualScores.reduce((a, b) => a + b, 0) / qualScores.length;
-                    total += qualAvg;
-                    count++;
-                }
-            }
-            
-            const score = count > 0 ? Math.round(total / count) : 0;
-            moduleScores[moduleId] = score;
-            
-            const scoreCircle = document.getElementById(`score-${moduleId}`);
-            scoreCircle.textContent = score;
-            scoreCircle.className = 'score-circle ' + getScoreClass(score);
-            
-            updateTotalScore();
-        }
-        
-        // 更新質化評分
-        function updateQualitativeScore(moduleId, indicator, value) {
-            const scoreSpan = event.target.nextElementSibling;
-            scoreSpan.textContent = value;
-            
-            if (!qualitativeScores[moduleId]) {
-                qualitativeScores[moduleId] = {};
-            }
-            qualitativeScores[moduleId][indicator] = parseInt(value);
-            
-            updateModuleScore(moduleId);
-        }
-        
-        // 獲取評分樣式類別
-        function getScoreClass(score) {
-            if (score >= 90) return 'score-excellent';
-            if (score >= 70) return 'score-good';
-            if (score >= 50) return 'score-average';
-            return 'score-poor';
-        }
-        
-        // 更新總評分
-        function updateTotalScore() {
-            if (!selectedIndustry) return;
-            
-            const config = enhancedIndustryConfigs[selectedIndustry];
-            let totalScore = 0;
-            let hasAllScores = true;
-            
-            Object.keys(config.modules).forEach(moduleId => {
-                if (moduleScores[moduleId] !== undefined) {
-                    totalScore += moduleScores[moduleId] * (config.modules[moduleId].weight / 100);
-                } else {
-                    hasAllScores = false;
-                }
-            });
-            
-            if (hasAllScores) {
-                totalScore = Math.round(totalScore);
-                document.getElementById('totalScore').textContent = totalScore;
-                updateRecommendation(totalScore);
-                updateEnhancedValuation();
-            }
-        }
-        
-        // 更新建議
-        function updateRecommendation(score) {
-            const recDiv = document.getElementById('recommendation');
-            let recClass, recText;
-            
-            if (score >= 75) {
-                recClass = 'rec-buy';
-                recText = '🟢 強烈建議買入 - 符合開倉條件';
-            } else if (score >= 50) {
-                recClass = 'rec-hold';
-                recText = '🟡 持有觀望 - 等待更好時機';
-            } else {
-                recClass = 'rec-sell';
-                recText = '🔴 避免投資 - 基本面偏弱';
-            }
-            
-            recDiv.className = `recommendation ${recClass}`;
-            recDiv.textContent = recText;
-        }
-        
-        // 更新信心指數
-        function updateConfidenceLevel() {
-            const allQualScores = [];
-            Object.values(qualitativeScores).forEach(moduleQual => {
-                Object.values(moduleQual).forEach(score => {
-                    allQualScores.push(score);
-                });
-            });
-            
-            confidenceLevel = allQualScores.length > 0 ? 
-                Math.round(allQualScores.reduce((a, b) => a + b, 0) / allQualScores.length) : 50;
-            
-            document.getElementById('confidenceLevel').textContent = confidenceLevel;
-        }
-        
-        // 更新風險評估
-        function updateRiskAssessment() {
-            const sentiment = marketEnvironment.sentiment;
-            const vix = parseFloat(document.getElementById('vixIndex').value) || 20;
-            // 這裡可以根據情緒和VIX更新風險評估邏輯
-        }
-        
-        // 執行全面分析
-        function calculateEnhancedAnalysis() {
-            if (!selectedIndustry) {
-                alert('請先選擇產業類別');
-                return;
-            }
-            
-            updateTotalScore();
-            updateEnhancedValuation();
-            updateActionSuggestions();
-            autoSaveAnalysis();
-        }
-        
-        // 增強估值計算
-        function updateEnhancedValuation() {
-            const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 100;
-            const totalScore = parseInt(document.getElementById('totalScore').textContent) || 0;
-            
-            if (!selectedIndustry) return;
-            
-            const config = enhancedIndustryConfigs[selectedIndustry];
-            const valuation = config.valuation;
-            
-            // 基於評分調整估值
-            const scoreMultiplier = totalScore / 75; // 75分為基準
-            const basePrice = currentPrice;
-            
-            // 計算各情境估值
-            let pessimistic, neutral, optimistic;
-            
-            if (valuation.pessimistic.pe) {
-                pessimistic = Math.round(basePrice * 0.8);
-                neutral = Math.round(basePrice * 1.2 * scoreMultiplier);
-                optimistic = Math.round(basePrice * 1.8 * scoreMultiplier);
-            } else if (valuation.pessimistic.pb) {
-                pessimistic = Math.round(basePrice * 0.7);
-                neutral = Math.round(basePrice * 1.1 * scoreMultiplier);
-                optimistic = Math.round(basePrice * 1.6 * scoreMultiplier);
-            } else if (valuation.pessimistic.yield) {
-                pessimistic = Math.round(basePrice * 0.8);
-                neutral = Math.round(basePrice * 1.1 * scoreMultiplier);
-                optimistic = Math.round(basePrice * 1.4 * scoreMultiplier);
-            }
-            
-            document.getElementById('pessimisticPrice').textContent = `${pessimistic}`;
-            document.getElementById('neutralPrice').textContent = `${neutral}`;
-            document.getElementById('optimisticPrice').textContent = `${optimistic}`;
-            
-            document.getElementById('pessimisticAssumption').textContent = valuation.pessimistic.desc;
-            document.getElementById('neutralAssumption').textContent = valuation.neutral.desc;
-            document.getElementById('optimisticAssumption').textContent = valuation.optimistic.desc;
-            
-            // 蒙地卡羅模擬
-            const monteCarloResult = runSimpleMonteCarlo(currentPrice, totalScore);
-            document.getElementById('monteCarloPrice').textContent = 
-                `${monteCarloResult.mean} ± ${monteCarloResult.std}`;
-        }
-        
-        // 簡化蒙地卡羅模擬
-        function runSimpleMonteCarlo(basePrice, score) {
-            const simulations = 1000;
-            const results = [];
-            
-            for (let i = 0; i < simulations; i++) {
-                const randomFactor = (Math.random() - 0.5) * 0.6 + 1;
-                const scoreFactor = (score / 75);
-                const result = basePrice * randomFactor * scoreFactor;
-                results.push(result);
-            }
-            
-            const mean = Math.round(results.reduce((a, b) => a + b) / results.length);
-            const variance = results.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / results.length;
-            const std = Math.round(Math.sqrt(variance));
-            
-            return { mean, std };
-        }
-        
-        // 更新操作建議
-        function updateActionSuggestions() {
-            const totalScore = parseInt(document.getElementById('totalScore').textContent) || 0;
-            const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 0;
-            const suggestionsDiv = document.getElementById('actionSuggestions');
-            
-            if (totalScore >= 75) {
-                suggestionsDiv.innerHTML = `
-                    <div class="rec-buy" style="margin-bottom: 15px;">
-                        <h3>🎯 開倉策略</h3>
-                        <p>• 開倉價位: ${currentPrice} (總資金30%)</p>
-                        <p>• 第一次加倉: ${Math.round(currentPrice * 0.85)} (總資金40%)</p>
-                        <p>• 第二次加倉: ${Math.round(currentPrice * 0.75)} (總資金30%)</p>
-                    </div>
-                    <div class="rec-buy">
-                        <h3>📈 目標設定</h3>
-                        <p>• 預期持有期間: 2-3年</p>
-                        <p>• 目標報酬率: 100%</p>
-                        <p>• 止損點: ${Math.round(currentPrice * 0.65)}</p>
-                    </div>
-                `;
-            } else if (totalScore >= 50) {
-                suggestionsDiv.innerHTML = `
-                    <div class="rec-hold">
-                        <h3>⏳ 觀望策略</h3>
-                        <p>• 等待基本面改善或股價更具吸引力</p>
-                        <p>• 關注關鍵指標變化</p>
-                        <p>• 考慮分批小量布局</p>
-                    </div>
-                `;
-            } else {
-                suggestionsDiv.innerHTML = `
-                    <div class="rec-sell">
-                        <h3>❌ 避免投資</h3>
-                        <p>• 基本面評分過低，不符合投資標準</p>
-                        <p>• 建議尋找其他投資標的</p>
-                        <p>• 若已持有，考慮逐步減倉</p>
-                    </div>
-                `;
-            }
-        }
-        
-        // 壓力測試
-        function runStressTest() {
-            const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 100;
-            
-            const scenarios = [
-                { name: '金融危機', decline: 50 },
-                { name: '利率暴升', decline: 30 },
-                { name: '行業衰退', decline: 40 },
-                { name: '黑天鵝事件', decline: 60 }
-            ];
-            
-            let report = '壓力測試結果:\n\n';
-            scenarios.forEach(scenario => {
-                const stressPrice = Math.round(currentPrice * (1 - scenario.decline / 100));
-                report += `${scenario.name}: ${stressPrice} (跌幅${scenario.decline}%)\n`;
-            });
-            
-            alert(report);
-        }
-        
-        // 蒙地卡羅模擬
-        function runMonteCarloSimulation() {
-            const iterations = 10000;
-            const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 100;
-            const totalScore = parseInt(document.getElementById('totalScore').textContent) || 0;
-            
-            alert(`正在執行${iterations}次蒙地卡羅模擬...`);
-            
-            const results = [];
-            for (let i = 0; i < iterations; i++) {
-                const marketShock = (Math.random() - 0.5) * 0.8;
-                const companyPerformance = (Math.random() - 0.5) * 0.4 + (totalScore - 75) / 75 * 0.3;
-                const timeDecay = Math.random() * 0.1;
-                
-                const finalPrice = currentPrice * (1 + marketShock + companyPerformance - timeDecay);
-                results.push(Math.max(finalPrice, currentPrice * 0.1));
-            }
-            
-            results.sort((a, b) => a - b);
-            const p5 = results[Math.floor(iterations * 0.05)];
-            const p50 = results[Math.floor(iterations * 0.5)];
-            const p95 = results[Math.floor(iterations * 0.95)];
-            
-            const report = `
-蒙地卡羅模擬結果 (${iterations}次):
-• 5%分位數: ${Math.round(p5)}
-• 中位數: ${Math.round(p50)}  
-• 95%分位數: ${Math.round(p95)}
-• VaR(95%): ${Math.round((currentPrice - p5) / currentPrice * 100)}%
-            `;
-            
-            alert(report);
-        }
-        
-        // AI分析
-        function runAIAnalysis() {
-            setTimeout(() => {
-                const insights = document.getElementById('aiInsights');
-                insights.innerHTML = `
-                    <p>🔍 AI分析完成:</p>
-                    <ul>
-                        <li>✅ 競爭優勢: 技術護城河深厚</li>
-                        <li>⚠️ 供應鏈風險: 中等程度地緣政治風險</li>
-                        <li>✅ ESG評分: B級，符合投資標準</li>
-                        <li>⚠️ 監管風險: 反壟斷調查關注</li>
-                        <li>✅ 創新能力: 研發投入持續增加</li>
-                    </ul>
-                    <p><strong>AI建議: 謹慎樂觀，建議分批建倉</strong></p>
-                `;
-            }, 2000);
-        }
-        
-        // 自動保存功能
-        function autoSaveAnalysis() {
-            const analysisData = {
-                exchange: selectedExchange,
-                industry: selectedIndustry,
-                stockCode: document.getElementById('stockCode').value,
-                currentPrice: document.getElementById('currentPrice').value,
-                marketCap: document.getElementById('marketCap').value,
-                marketEnvironment: {
-                    environment: selectedEnvironment,
-                    interestRate: document.getElementById('interestRate').value,
-                    inflation: document.getElementById('inflation').value,
-                    gdpGrowth: document.getElementById('gdpGrowth').value,
-                    usdTrend: document.getElementById('usdTrend').value,
-                    vixIndex: document.getElementById('vixIndex').value
-                },
-                moduleScores: moduleScores,
-                qualitativeScores: qualitativeScores,
-                totalScore: document.getElementById('totalScore').textContent,
-                confidenceLevel: document.getElementById('confidenceLevel').textContent
-            };
-            
-            const saved = dataManager.saveAnalysis(analysisData);
-            if (saved) {
-                console.log('分析已自動保存');
-            }
-        }
-        
-        // 載入上次分析
-        function loadLastAnalysis() {
-            const lastAnalysis = dataManager.loadAnalysis();
-            if (!lastAnalysis) return;
-            
-            // 恢復基本數據
-            if (lastAnalysis.exchange) {
-                document.getElementById('exchange').value = lastAnalysis.exchange;
-                selectedExchange = lastAnalysis.exchange;
-                updateCurrencyDisplay();
-            }
-            
-            if (lastAnalysis.stockCode) {
-                document.getElementById('stockCode').value = lastAnalysis.stockCode;
-            }
-            
-            if (lastAnalysis.currentPrice) {
-                document.getElementById('currentPrice').value = lastAnalysis.currentPrice;
-            }
-            
-            if (lastAnalysis.marketCap) {
-                document.getElementById('marketCap').value = lastAnalysis.marketCap;
-                updateMarketCapDisplay();
-            }
-            
-            // 恢復市場環境
-            if (lastAnalysis.marketEnvironment) {
-                const env = lastAnalysis.marketEnvironment;
-                if (env.environment) {
-                    selectedEnvironment = env.environment;
-                    document.querySelector(`[data-env="${env.environment}"]`)?.classList.add('selected');
-                }
-                
-                ['interestRate', 'inflation', 'gdpGrowth', 'usdTrend', 'vixIndex'].forEach(field => {
-                    if (env[field] && document.getElementById(field)) {
-                        document.getElementById(field).value = env[field];
-                    }
-                });
-            }
-            
-            // 恢復產業選擇
-            if (lastAnalysis.industry) {
-                selectedIndustry = lastAnalysis.industry;
-                document.querySelector(`[data-industry="${lastAnalysis.industry}"]`)?.classList.add('selected');
-                generateEnhancedModules();
-            }
-            
-            // 恢復評分
-            if (lastAnalysis.moduleScores) {
-                moduleScores = lastAnalysis.moduleScores;
-            }
-            
-            if (lastAnalysis.qualitativeScores) {
-                qualitativeScores = lastAnalysis.qualitativeScores;
-            }
-            
-            // 恢復總評分
-            if (lastAnalysis.totalScore && lastAnalysis.totalScore !== '--') {
-                document.getElementById('totalScore').textContent = lastAnalysis.totalScore;
-            }
-            
-            if (lastAnalysis.confidenceLevel && lastAnalysis.confidenceLevel !== '--') {
-                document.getElementById('confidenceLevel').textContent = lastAnalysis.confidenceLevel;
-            }
-        }
-        
-        // 顯示分析歷史
-        function showAnalysisHistory() {
-            const backups = dataManager.getBackups();
-            if (backups.length === 0) {
-                alert('暫無歷史記錄');
-                return;
-            }
-            
-            let historyHtml = '<h3>分析歷史記錄</h3><div style="max-height: 400px; overflow-y: auto;">';
-            
-            backups.reverse().forEach((backup, index) => {
-                const date = new Date(backup.timestamp).toLocaleString();
-                const stockCode = backup.data.stockCode || '未知';
-                const score = backup.data.totalScore || '--';
-                
-                historyHtml += `
-                    <div style="border: 1px solid #ddd; margin: 10px 0; padding: 10px; border-radius: 5px;">
-                        <strong>${stockCode}</strong> - ${date}<br>
-                        評分: ${score}/100<br>
-                        <button onclick="loadHistoryRecord(${backups.length - 1 - index})" style="margin-top: 5px; padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer;">載入此記錄</button>
-                    </div>
-                `;
-            });
-            
-            historyHtml += '</div>';
-            
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0,0,0,0.5); z-index: 10000; display: flex; 
-                align-items: center; justify-content: center;
-            `;
-            
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: white; padding: 20px; border-radius: 10px; 
-                max-width: 500px; width: 90%; max-height: 80%;
-            `;
-            content.innerHTML = historyHtml + '<button onclick="this.closest(\'.modal\').remove()" style="margin-top: 10px; padding: 8px 15px; background: #6b7280; color: white; border: none; border-radius: 5px; cursor: pointer;">關閉</button>';
-            
-            modal.className = 'modal';
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-        }
-        
-        // 載入歷史記錄
-        function loadHistoryRecord(index) {
-            const backups = dataManager.getBackups();
-            if (backups[index]) {
-                dataManager.saveAnalysis(backups[index].data);
-                location.reload();
-            }
-        }
-        
-        // 導出個人數據
-        function exportPersonalData() {
-            const exportData = dataManager.exportAllData();
-            const blob = new Blob([exportData], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `個人投資分析數據_${new Date().toISOString().split('T')[0]}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            alert('個人數據已導出！可用於備份或轉移到其他設備');
-        }
-        
-        // 導入個人數據
-        function importPersonalData() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            const success = dataManager.importData(e.target.result);
-                            if (success) {
-                                alert('數據導入成功！頁面將重新載入');
-                                location.reload();
-                            } else {
-                                alert('數據導入失敗，請檢查文件格式');
-                            }
-                        } catch (error) {
-                            alert('數據導入失敗：' + error.message);
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-            };
-            input.click();
-        }
-        
-        // 導出詳細報告
-        function exportEnhancedReport() {
-            const stockCode = document.getElementById('stockCode').value;
-            const exchange = document.getElementById('exchange').value;
-            
-            if (!stockCode || !selectedIndustry) {
-                alert('請完整填寫股票資訊並選擇產業');
-                return;
-            }
-            
-            const report = generateDetailedReport();
-            const blob = new Blob([report], { type: 'text/plain; charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `${stockCode}_${exchange.toUpperCase()}_投資分析報告_${new Date().toISOString().split('T')[0]}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-        
-        // 生成詳細報告
-        function generateDetailedReport() {
-            const stockCode = document.getElementById('stockCode').value;
-            const exchange = document.getElementById('exchange').value;
-            const currentPrice = document.getElementById('currentPrice').value;
-            const marketCap = document.getElementById('marketCap').value;
-            const totalScore = document.getElementById('totalScore').textContent;
-            const confidenceLevel = document.getElementById('confidenceLevel').textContent;
-            const industryName = enhancedIndustryConfigs[selectedIndustry]?.name || '';
-            const currency = marketConfigs[exchange]?.currency || 'USD';
-            
-            return `
-===============================================
-         個人投資分析報告 v2.0
-===============================================
-
-股票代碼: ${stockCode} (${exchange.toUpperCase()})
-當前股價: ${currentPrice} ${currency}
-市值: ${marketCap} 億${currency}
-產業類別: ${industryName}
-分析日期: ${new Date().toLocaleDateString()}
-市場環境: ${selectedEnvironment || '未選擇'}
-
-===============================================
-         綜合評分結果
-===============================================
-
-總評分: ${totalScore}/100
-信心指數: ${confidenceLevel}%
-
-===============================================
-         多情境估值分析
-===============================================
-
-悲觀情境: ${document.getElementById('pessimisticPrice')?.textContent || '--'}
-中立情境: ${document.getElementById('neutralPrice')?.textContent || '--'}
-樂觀情境: ${document.getElementById('optimisticPrice')?.textContent || '--'}
-蒙地卡羅模擬: ${document.getElementById('monteCarloPrice')?.textContent || '--'}
-
-===============================================
-         投資建議
-===============================================
-
-${document.getElementById('recommendation')?.textContent || ''}
-
-===============================================
-         免責聲明
-===============================================
-
-本報告僅供個人投資參考，不構成投資建議。
-投資有風險，決策需謹慎。
-過去績效不代表未來表現。
-
-===============================================
-報告結束 - 系統版本 v2.0
-===============================================
-            `;
-        }
-        
-        // 設定價格警報
-        function setPriceAlert() {
-            const alertPrice = document.getElementById('priceAlert').value;
-            const stockCode = document.getElementById('stockCode').value;
-            
-            if (alertPrice && stockCode) {
-                alert(`價格警報已設定: ${stockCode} 目標價格 ${alertPrice}`);
-            } else {
-                alert('請先輸入股票代碼和目標價格');
-            }
-        }
-        
-        // 重設所有
-        function resetAll() {
-            if (confirm('確定要重設所有資料嗎？')) {
-                // 清除所有輸入
-                document.getElementById('exchange').value = 'us';
-                document.getElementById('stockCode').value = '';
-                document.getElementById('currentPrice').value = '';
-                document.getElementById('marketCap').value = '';
-                document.getElementById('vixIndex').value = '';
-                
-                // 重設選擇狀態
-                document.querySelectorAll('.env-card').forEach(c => c.classList.remove('selected'));
-                document.querySelectorAll('.sentiment-option').forEach(o => o.classList.remove('selected'));
-                document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
-                
-                // 重設模組
-                document.getElementById('moduleGrid').innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">請先選擇產業類別以顯示評分模組</p>';
-                
-                // 重設評分
-                document.getElementById('totalScore').textContent = '--';
-                document.getElementById('confidenceLevel').textContent = '--';
-                document.getElementById('recommendation').textContent = '請先完成所有評估';
-                document.getElementById('actionSuggestions').innerHTML = '<p>請完成評分後查看操作建議</p>';
-                
-                // 重設估值
-                ['pessimistic', 'neutral', 'optimistic', 'monteCarlo'].forEach(scenario => {
-                    const priceElement = document.getElementById(`${scenario}Price`);
-                    if (priceElement) priceElement.textContent = '--';
-                });
-                
-                // 重設質化分析
-                ['ceoLeadership', 'strategy', 'innovation', 'brandValue'].forEach(id => {
-                    const slider = document.getElementById(id);
-                    if (slider) slider.value = 50;
-                    const display = document.getElementById(id.replace(/([A-Z])/g, '') + 'Value') || 
-                                   document.getElementById(id + 'Score');
-                    if (display) display.textContent = '50';
-                });
-                
-                // 重設開關
-                document.getElementById('aiAnalysis').checked = false;
-                document.getElementById('realTimeMonitoring').checked = false;
-                document.getElementById('aiInsights').style.display = 'none';
-                
-                // 重設變數
-                selectedIndustry = null;
-                selectedEnvironment = null;
-                selectedExchange = 'us';
-                moduleScores = {};
-                qualitativeScores = {};
-                marketEnvironment = {};
-                confidenceLevel = 50;
-                
-                // 更新顯示
-                updateCurrencyDisplay();
-                alert('所有資料已重設完成！');
-            }
-        }
-        
-        // 頁面載入時自動載入上次分析
-        document.addEventListener('DOMContentLoaded', function() {
-            updateCurrencyDisplay();
-            updateMarketCapDisplay();
-            loadLastAnalysis();
-        });
-        
-        // 自動保存事件監聽
-        ['change', 'input'].forEach(eventType => {
-            document.addEventListener(eventType, function(e) {
-                if (e.target.matches('#stockCode, #currentPrice, #marketCap, #exchange')) {
-                    setTimeout(autoSaveAnalysis, 500);
-                }
-            });
-        });
-    </script>
-</body>
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -835,7 +52,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
             font-size: 12px;
             font-weight: bold;
             margin-left: 10px;
-            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
         }
         
         .section {
@@ -856,24 +72,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
             align-items: center;
             gap: 10px;
             font-size: 1.3em;
-        }
-        
-        .new-feature {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
-        }
-        
-        .enhanced-feature {
-            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: bold;
         }
         
         .input-group {
@@ -905,40 +103,10 @@ ${document.getElementById('recommendation')?.textContent || ''}
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
-        .market-environment {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .env-card {
-            padding: 12px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            background: linear-gradient(135deg, #f8fafc, #e2e8f0);
-            font-size: 14px;
-        }
-        
-        .env-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
-        }
-        
-        .env-card.selected {
-            border-color: #667eea;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-        }
-        
         .industry-selector {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
+            gap: 15px;
             margin-bottom: 15px;
         }
         
@@ -972,21 +140,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
         .industry-card p {
             font-size: 12px;
             margin-bottom: 5px;
-        }
-        
-        .industry-card small {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        
-        .dynamic-weights {
-            background: linear-gradient(135deg, #fef3c7, #f59e0b);
-            padding: 12px;
-            border-radius: 8px;
-            margin: 10px 0;
-            color: #92400e;
-            font-weight: 600;
-            font-size: 14px;
         }
         
         .module-grid {
@@ -1084,110 +237,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
             font-size: 12px;
         }
         
-        .confidence-slider {
-            width: 60px;
-            height: 6px;
-            border-radius: 3px;
-            background: #e2e8f0;
-            outline: none;
-            -webkit-appearance: none;
-        }
-        
-        .confidence-slider::-webkit-slider-thumb {
-            appearance: none;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            cursor: pointer;
-        }
-        
-        .qual-score {
-            font-weight: bold;
-            color: #667eea;
-            min-width: 25px;
-            text-align: center;
-        }
-        
-        .qualitative-section {
-            margin-top: 15px;
-            padding: 12px;
-            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-            border-radius: 8px;
-            border-left: 4px solid #10b981;
-        }
-        
-        .qualitative-section h3 {
-            color: #065f46;
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-        
-        .macro-indicators {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-        
-        .macro-card {
-            padding: 12px;
-            background: linear-gradient(135deg, #fef7ff, #f3e8ff);
-            border-radius: 8px;
-            border: 1px solid #e9d5ff;
-            text-align: center;
-        }
-        
-        .macro-card h4 {
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #4c1d95;
-        }
-        
-        .sentiment-meter {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 15px 0;
-            padding: 8px;
-            background: linear-gradient(135deg, #f0f9ff, #dbeafe);
-            border-radius: 8px;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-        
-        .sentiment-option {
-            padding: 6px 12px;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            font-size: 12px;
-            flex: 1;
-            text-align: center;
-            min-width: 80px;
-        }
-        
-        .sentiment-option.bearish {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .sentiment-option.neutral {
-            background: #fef3c7;
-            color: #d97706;
-        }
-        
-        .sentiment-option.bullish {
-            background: #dcfce7;
-            color: #16a34a;
-        }
-        
-        .sentiment-option.selected {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-        
         .total-score {
             text-align: center;
             padding: 30px;
@@ -1206,13 +255,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
             z-index: 1;
         }
         
-        .confidence-display {
-            margin-top: 10px;
-            font-size: 1.1em;
-            position: relative;
-            z-index: 1;
-        }
-        
         .recommendation {
             padding: 15px;
             border-radius: 10px;
@@ -1225,7 +267,7 @@ ${document.getElementById('recommendation')?.textContent || ''}
         .rec-hold { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; }
         .rec-sell { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; }
         
-        .enhanced-valuation {
+        .valuation-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
@@ -1244,13 +286,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
         .pessimistic { background: linear-gradient(135deg, #ef4444, #dc2626); }
         .neutral { background: linear-gradient(135deg, #6b7280, #4b5563); }
         .optimistic { background: linear-gradient(135deg, #10b981, #059669); }
-        .monte-carlo { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        
-        .scenario-probability {
-            font-size: 0.9em;
-            opacity: 0.9;
-            margin-top: 5px;
-        }
         
         .action-buttons {
             display: grid;
@@ -1269,8 +304,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
             transition: all 0.3s ease;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            position: relative;
-            overflow: hidden;
         }
         
         button:hover {
@@ -1298,107 +331,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
             color: white;
         }
         
-        .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 28px;
-        }
-        
-        .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            border-radius: 28px;
-            transition: .4s;
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 20px;
-            width: 20px;
-            left: 4px;
-            bottom: 4px;
-            background-color: white;
-            border-radius: 50%;
-            transition: .4s;
-        }
-        
-        input:checked + .slider {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-        }
-        
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
-        
-        .ai-insights {
-            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
-            border: 2px solid #38bdf8;
-            border-radius: 12px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-        
-        .ai-insights h3 {
-            color: #0c4a6e;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 16px;
-        }
-        
-        .mobile-guide {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-        }
-        
-        .mobile-step {
-            padding: 12px;
-            border-radius: 8px;
-        }
-        
-        .ios-guide {
-            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-        }
-        
-        .android-guide {
-            background: linear-gradient(135deg, #fef3c7, #fcd34d);
-        }
-        
-        .security-guide {
-            background: linear-gradient(135deg, #fef2f2, #fecaca);
-        }
-        
-        .mobile-step h4 {
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
-        
-        .mobile-step ol, .mobile-step ul {
-            font-size: 13px;
-            margin: 8px 0;
-            padding-left: 18px;
-        }
-        
-        .mobile-step small {
-            font-size: 11px;
-            opacity: 0.8;
-        }
-        
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
@@ -1421,28 +353,11 @@ ${document.getElementById('recommendation')?.textContent || ''}
                 grid-template-columns: 1fr;
             }
             
-            .enhanced-valuation {
+            .valuation-grid {
                 grid-template-columns: 1fr;
-            }
-            
-            .sentiment-meter {
-                flex-direction: column;
-                gap: 8px;
-            }
-            
-            .sentiment-option {
-                min-width: 120px;
             }
             
             .action-buttons {
-                grid-template-columns: 1fr;
-            }
-            
-            .macro-indicators {
-                grid-template-columns: 1fr;
-            }
-            
-            .market-environment {
                 grid-template-columns: 1fr;
             }
         }
@@ -1451,82 +366,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
 <body>
     <div class="container">
         <h1>📊 個人投資分析工具 <span class="version-badge">v2.0</span></h1>
-        
-        <!-- 市場環境評估 -->
-        <div class="section">
-            <h2>🌍 市場環境評估 <span class="new-feature">NEW</span></h2>
-            <div class="market-environment">
-                <div class="env-card" data-env="bull">
-                    <h3>🐂 牛市環境</h3>
-                    <p>低利率、高流動性</p>
-                </div>
-                <div class="env-card" data-env="bear">
-                    <h3>🐻 熊市環境</h3>
-                    <p>高利率、緊縮政策</p>
-                </div>
-                <div class="env-card" data-env="neutral">
-                    <h3>⚖️ 中性環境</h3>
-                    <p>平衡的貨幣政策</p>
-                </div>
-                <div class="env-card" data-env="volatile">
-                    <h3>⚡ 波動環境</h3>
-                    <p>地緣政治風險</p>
-                </div>
-            </div>
-            
-            <div class="macro-indicators">
-                <div class="macro-card">
-                    <h4>利率環境</h4>
-                    <select id="interestRate">
-                        <option value="low">低利率 (0-2%)</option>
-                        <option value="medium" selected>中性利率 (2-4%)</option>
-                        <option value="high">高利率 (4%+)</option>
-                    </select>
-                </div>
-                <div class="macro-card">
-                    <h4>通脹水準</h4>
-                    <select id="inflation">
-                        <option value="low">低通脹 (<2%)</option>
-                        <option value="target" selected>目標通脹 (2-3%)</option>
-                        <option value="high">高通脹 (>3%)</option>
-                    </select>
-                </div>
-                <div class="macro-card">
-                    <h4>經濟成長</h4>
-                    <select id="gdpGrowth">
-                        <option value="recession">衰退 (<0%)</option>
-                        <option value="slow">緩慢成長 (0-2%)</option>
-                        <option value="moderate" selected>穩健成長 (2-4%)</option>
-                        <option value="strong">強勁成長 (>4%)</option>
-                    </select>
-                </div>
-                <div class="macro-card">
-                    <h4>美元走勢</h4>
-                    <select id="usdTrend">
-                        <option value="weak">美元走弱</option>
-                        <option value="stable" selected>美元穩定</option>
-                        <option value="strong">美元走強</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        
-        <!-- 市場情緒分析 -->
-        <div class="section">
-            <h2>📈 市場情緒分析 <span class="new-feature">NEW</span></h2>
-            <div class="sentiment-meter">
-                <div class="sentiment-option bearish" data-sentiment="bearish">極度悲觀</div>
-                <div class="sentiment-option bearish" data-sentiment="pessimistic">悲觀</div>
-                <div class="sentiment-option neutral" data-sentiment="neutral">中性</div>
-                <div class="sentiment-option bullish" data-sentiment="optimistic">樂觀</div>
-                <div class="sentiment-option bullish" data-sentiment="euphoric">極度樂觀</div>
-            </div>
-            <div class="input-group">
-                <label>VIX恐慌指數:</label>
-                <input type="number" id="vixIndex" placeholder="輸入VIX數值" min="10" max="80">
-                <span id="vixInterpretation">--</span>
-            </div>
-        </div>
         
         <!-- 基本資訊輸入 -->
         <div class="section">
@@ -1556,112 +395,44 @@ ${document.getElementById('recommendation')?.textContent || ''}
                 <input type="number" id="marketCap" placeholder="輸入市值" step="0.1">
                 <span id="marketCapDisplay">億USD</span>
             </div>
-            <div class="input-group">
-                <label>市值規模:</label>
-                <span id="marketCapSize">--</span>
-                <span></span>
-            </div>
         </div>
         
         <!-- 產業選擇 -->
         <div class="section">
-            <h2>🏭 產業類別選擇 <span class="enhanced-feature">ENHANCED</span></h2>
-            <div class="dynamic-weights">
-                ⚡ 動態權重：系統將根據市場環境自動調整各模組權重
-            </div>
+            <h2>🏭 產業類別選擇</h2>
             <div class="industry-selector">
                 <div class="industry-card" data-industry="tech">
                     <h3>💻 科技成長型</h3>
                     <p>軟體、半導體、電商</p>
-                    <small>利率敏感度：高</small>
                 </div>
                 <div class="industry-card" data-industry="cyclical">
                     <h3>🔄 週期型</h3>
                     <p>鋼鐵、化工、航運</p>
-                    <small>經濟敏感度：極高</small>
                 </div>
                 <div class="industry-card" data-industry="defensive">
                     <h3>🛡️ 防禦型</h3>
                     <p>公用事業、食品、電信</p>
-                    <small>抗風險能力：高</small>
                 </div>
                 <div class="industry-card" data-industry="financial">
                     <h3>🏦 金融型</h3>
                     <p>銀行、保險、證券</p>
-                    <small>利率受益度：高</small>
                 </div>
                 <div class="industry-card" data-industry="capital">
                     <h3>🏗️ 資本密集型</h3>
                     <p>房地產、基建、能源</p>
-                    <small>通脹對沖：中等</small>
                 </div>
                 <div class="industry-card" data-industry="consumer">
                     <h3>🛍️ 消費型</h3>
                     <p>零售、餐飲、奢侈品</p>
-                    <small>消費力敏感度：高</small>
                 </div>
             </div>
         </div>
         
         <!-- 評分模組 -->
         <div class="section">
-            <h2>📈 評分模組 <span class="enhanced-feature">ENHANCED</span></h2>
+            <h2>📈 評分模組</h2>
             <div class="module-grid" id="moduleGrid">
                 <p style="text-align: center; color: #6b7280; padding: 40px;">請先選擇產業類別以顯示評分模組</p>
-            </div>
-        </div>
-        
-        <!-- 質化分析 -->
-        <div class="section">
-            <h2>🎯 質化分析 <span class="new-feature">NEW</span></h2>
-            <div class="qualitative-section">
-                <h3>管理層質量評估</h3>
-                <div class="input-group">
-                    <label>CEO領導力:</label>
-                    <input type="range" min="0" max="100" value="50" class="confidence-slider" id="ceoLeadership">
-                    <span id="ceoValue">50</span>
-                </div>
-                <div class="input-group">
-                    <label>戰略執行力:</label>
-                    <input type="range" min="0" max="100" value="50" class="confidence-slider" id="strategy">
-                    <span id="strategyValue">50</span>
-                </div>
-                <div class="input-group">
-                    <label>創新能力:</label>
-                    <input type="range" min="0" max="100" value="50" class="confidence-slider" id="innovation">
-                    <span id="innovationValue">50</span>
-                </div>
-                <div class="input-group">
-                    <label>品牌價值:</label>
-                    <input type="range" min="0" max="100" value="50" class="confidence-slider" id="brandValue">
-                    <span id="brandValueScore">50</span>
-                </div>
-            </div>
-        </div>
-        
-        <!-- AI輔助分析 -->
-        <div class="section">
-            <h2>🤖 AI輔助分析 <span class="new-feature">NEW</span></h2>
-            <div class="ai-insights">
-                <h3>🧠 智能風險識別</h3>
-                <div class="input-group">
-                    <label>啟用AI分析:</label>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="aiAnalysis">
-                        <span class="slider"></span>
-                    </label>
-                    <span></span>
-                </div>
-                <div id="aiInsights" style="display: none;">
-                    <p>🔍 AI正在分析以下風險因子...</p>
-                    <ul>
-                        <li>競爭對手動態分析</li>
-                        <li>供應鏈風險評估</li>
-                        <li>監管政策影響</li>
-                        <li>技術替代風險</li>
-                        <li>ESG風險評估</li>
-                    </ul>
-                </div>
             </div>
         </div>
         
@@ -1669,9 +440,6 @@ ${document.getElementById('recommendation')?.textContent || ''}
         <div class="total-score">
             <h2 id="totalScore">--</h2>
             <p>總評分</p>
-            <div class="confidence-display">
-                信心指數: <span id="confidenceLevel">--</span>%
-            </div>
             <div class="recommendation" id="recommendation">
                 請先完成所有評估
             </div>
@@ -1679,547 +447,271 @@ ${document.getElementById('recommendation')?.textContent || ''}
         
         <!-- 估值模型 -->
         <div class="section">
-            <h2>💰 三情境估值模型 <span class="enhanced-feature">ENHANCED</span></h2>
-            <div class="enhanced-valuation">
+            <h2>💰 三情境估值模型</h2>
+            <div class="valuation-grid">
                 <div class="valuation-card pessimistic">
                     <h3>悲觀情境</h3>
-                    <div class="scenario-probability">機率: <span id="pessimisticProb">30%</span></div>
                     <p id="pessimisticPrice">--</p>
                     <small id="pessimisticAssumption">--</small>
                 </div>
                 <div class="valuation-card neutral">
                     <h3>中立情境</h3>
-                    <div class="scenario-probability">機率: <span id="neutralProb">50%</span></div>
                     <p id="neutralPrice">--</p>
                     <small id="neutralAssumption">--</small>
                 </div>
                 <div class="valuation-card optimistic">
                     <h3>樂觀情境</h3>
-                    <div class="scenario-probability">機率: <span id="optimisticProb">20%</span></div>
                     <p id="optimisticPrice">--</p>
                     <small id="optimisticAssumption">--</small>
-                </div>
-                <div class="valuation-card monte-carlo">
-                    <h3>蒙地卡羅模擬</h3>
-                    <div class="scenario-probability">10,000次模擬</div>
-                    <p id="monteCarloPrice">--</p>
-                    <small>期望值 ± 標準差</small>
                 </div>
             </div>
         </div>
         
         <!-- 操作建議 -->
         <div class="section">
-            <h2>🎯 操作建議 <span class="enhanced-feature">ENHANCED</span></h2>
+            <h2>🎯 操作建議</h2>
             <div id="actionSuggestions">
                 <p>請完成評分後查看操作建議</p>
-            </div>
-            
-            <div class="input-group">
-                <label>投資時間軸:</label>
-                <select id="timeHorizon">
-                    <option value="short">短期 (6個月內)</option>
-                    <option value="medium" selected>中期 (1-2年)</option>
-                    <option value="long">長期 (3-5年)</option>
-                    <option value="forever">永久持有</option>
-                </select>
-                <span></span>
-            </div>
-            
-            <div class="input-group">
-                <label>風險承受度:</label>
-                <select id="riskTolerance">
-                    <option value="conservative">保守型</option>
-                    <option value="moderate" selected>穩健型</option>
-                    <option value="aggressive">積極型</option>
-                    <option value="speculative">投機型</option>
-                </select>
-                <span></span>
-            </div>
-        </div>
-        
-        <!-- 個人數據管理 -->
-        <div class="section">
-            <h2>💾 個人數據管理 <span class="new-feature">NEW</span></h2>
-            <div class="action-buttons">
-                <button class="btn-success" onclick="autoSaveAnalysis()">💾 手動保存</button>
-                <button class="btn-secondary" onclick="showAnalysisHistory()">📋 分析歷史</button>
-                <button class="btn-primary" onclick="exportPersonalData()">📤 導出數據</button>
-                <button class="btn-warning" onclick="importPersonalData()">📥 導入數據</button>
-            </div>
-            <div style="margin-top: 15px; padding: 12px; background: #f0f9ff; border-radius: 8px;">
-                <h4>💡 使用提示：</h4>
-                <ul style="margin: 8px 0; padding-left: 18px; font-size: 13px;">
-                    <li>系統會自動保存您的分析記錄</li>
-                    <li>定期導出數據備份，避免瀏覽器清除數據</li>
-                    <li>可在不同設備間導入/導出數據</li>
-                    <li>歷史記錄最多保留10筆</li>
-                </ul>
-            </div>
-        </div>
-        
-        <!-- 手機使用指南 -->
-        <div class="section">
-            <h2>📱 手機使用指南 <span class="new-feature">NEW</span></h2>
-            <div class="mobile-guide">
-                <div class="mobile-step ios-guide">
-                    <h4>🍎 iPhone 用戶</h4>
-                    <ol>
-                        <li>用 Safari 開啟此頁面</li>
-                        <li>點擊底部「分享」按鈕</li>
-                        <li>選擇「加入主畫面」</li>
-                        <li>設定名稱後確認</li>
-                    </ol>
-                    <small>建議名稱：投資分析工具</small>
-                </div>
-                
-                <div class="mobile-step android-guide">
-                    <h4>🤖 Android 用戶</h4>
-                    <ol>
-                        <li>用 Chrome 開啟此頁面</li>
-                        <li>點擊右上角「⋮」選單</li>
-                        <li>選擇「加到主畫面」</li>
-                        <li>確認添加</li>
-                    </ol>
-                    <small>如同原生APP般使用</small>
-                </div>
-                
-                <div class="mobile-step security-guide">
-                    <h4>💾 數據安全</h4>
-                    <ul>
-                        <li>定期導出數據備份</li>
-                        <li>清除瀏覽器前先備份</li>
-                        <li>可在多設備間同步</li>
-                        <li>本地存儲，隱私安全</li>
-                    </ul>
-                </div>
             </div>
         </div>
         
         <!-- 功能按鈕 -->
         <div class="action-buttons">
-            <button class="btn-primary" onclick="calculateEnhancedAnalysis()">🚀 開始全面分析</button>
-            <button class="btn-secondary" onclick="runStressTest()">🧪 執行壓力測試</button>
-            <button class="btn-success" onclick="exportEnhancedReport()">📊 導出詳細報告</button>
-            <button class="btn-warning" onclick="runMonteCarloSimulation()">🎲 蒙地卡羅模擬</button>
-            <button class="btn-secondary" onclick="resetAll()">🔄 重設所有</button>
+            <button class="btn-primary" onclick="calculateAnalysis()">🚀 開始分析</button>
+            <button class="btn-secondary" onclick="exportReport()">📊 導出報告</button>
+            <button class="btn-success" onclick="saveData()">💾 保存數據</button>
+            <button class="btn-warning" onclick="resetAll()">🔄 重設所有</button>
         </div>
         
-        <!-- 即時監控設定 -->
+        <!-- 手機使用指南 -->
         <div class="section">
-            <h2>⏰ 即時監控設定 <span class="new-feature">NEW</span></h2>
-            <div class="input-group">
-                <label>啟用即時監控:</label>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="realTimeMonitoring">
-                    <span class="slider"></span>
-                </label>
-                <span>每日更新基本面數據</span>
-            </div>
-            <div class="input-group">
-                <label>價格警報設定:</label>
-                <input type="number" id="priceAlert" placeholder="目標價格">
-                <button class="btn-primary" onclick="setPriceAlert()">設定警報</button>
+            <h2>📱 手機使用指南</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                <div style="padding: 15px; background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-radius: 10px;">
+                    <h4>🍎 iPhone 用戶</h4>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>用 Safari 開啟此頁面</li>
+                        <li>點擊底部「分享」按鈕</li>
+                        <li>選擇「加入主畫面」</li>
+                        <li>設定名稱後確認</li>
+                    </ol>
+                </div>
+                
+                <div style="padding: 15px; background: linear-gradient(135deg, #fef3c7, #fcd34d); border-radius: 10px;">
+                    <h4>🤖 Android 用戶</h4>
+                    <ol style="margin: 10px 0; padding-left: 20px;">
+                        <li>用 Chrome 開啟此頁面</li>
+                        <li>點擊右上角「⋮」選單</li>
+                        <li>選擇「加到主畫面」</li>
+                        <li>確認添加</li>
+                    </ol>
+                </div>
             </div>
         </div>
     </div>
     
     <script>
-        // 通用市場配置
-        const marketConfigs = {
-            us: {
-                currency: 'USD',
-                marketCapLevels: {
-                    small: { min: 0, max: 20, label: '小型股' },
-                    mid: { min: 20, max: 100, label: '中型股' }, 
-                    large: { min: 100, max: Infinity, label: '大型股' }
-                }
-            },
-            tw: {
-                currency: 'TWD',
-                marketCapLevels: {
-                    small: { min: 0, max: 100, label: '小型股' },
-                    mid: { min: 100, max: 500, label: '中型股' },
-                    large: { min: 500, max: Infinity, label: '大型股' }
-                }
-            },
-            hk: {
-                currency: 'HKD', 
-                marketCapLevels: {
-                    small: { min: 0, max: 20, label: '小型股' },
-                    mid: { min: 20, max: 100, label: '中型股' },
-                    large: { min: 100, max: Infinity, label: '大型股' }
-                }
-            }
-        };
-        
         // 產業配置
-        const enhancedIndustryConfigs = {
+        const industryConfigs = {
             tech: {
                 name: '科技成長型',
-                baseWeights: { growth: 40, profitability: 30, valuation: 20, health: 10 },
                 modules: {
                     growth: { 
                         weight: 40, 
                         name: '成長性', 
-                        indicators: ['營收成長率', '研發費用比', '新產品營收占比', '用戶增長率'],
-                        qualitative: ['技術創新能力', '市場領先地位', '人才吸引力']
+                        indicators: ['營收成長率', '研發費用比', '新產品營收占比', '用戶增長率']
                     },
                     profitability: { 
                         weight: 30, 
                         name: '盈利能力', 
-                        indicators: ['毛利率', 'ROE', 'ROA', '淨利率'],
-                        qualitative: ['商業模式強度', '定價能力', '成本控制']
+                        indicators: ['毛利率', 'ROE', 'ROA', '淨利率']
                     },
                     valuation: { 
                         weight: 20, 
                         name: '估值', 
-                        indicators: ['PEG', 'P/S', 'EV/Revenue', 'P/FCF'],
-                        qualitative: ['市場預期', '成長持續性', '競爭優勢']
+                        indicators: ['PEG', 'P/S', 'EV/Revenue']
                     },
                     health: { 
                         weight: 10, 
                         name: '財務健康', 
-                        indicators: ['現金比', '負債率', '流動比率', '燒錢率'],
-                        qualitative: ['資金來源', '融資能力', '現金管理']
+                        indicators: ['現金比', '負債率', '流動比率']
                     }
                 },
                 valuation: {
-                    pessimistic: { pe: 15, desc: 'P/E=15x, 利率上升+競爭加劇' },
-                    neutral: { pe: 25, desc: 'P/E=25x, 穩定成長軌道' },
-                    optimistic: { pe: 40, desc: 'P/E=40x, AI革命性突破' }
+                    pessimistic: { desc: 'P/E=15x, 利率上升+競爭加劇' },
+                    neutral: { desc: 'P/E=25x, 穩定成長軌道' },
+                    optimistic: { desc: 'P/E=40x, AI革命性突破' }
                 }
             },
             cyclical: {
                 name: '週期型',
-                baseWeights: { health: 40, valuation: 30, profitability: 20, growth: 10 },
                 modules: {
                     health: { 
                         weight: 40, 
                         name: '財務健康', 
-                        indicators: ['負債率', '現金比', '營運現金流', '淨現金比率'],
-                        qualitative: ['管理層經驗', '週期管理能力', '成本控制']
+                        indicators: ['負債率', '現金比', '營運現金流', '淨現金比率']
                     },
                     valuation: { 
                         weight: 30, 
                         name: '估值', 
-                        indicators: ['P/B', 'EV/EBITDA', '週期調整P/E', '股息殖利率'],
-                        qualitative: ['週期位置', '資產重估潛力', '併購價值']
+                        indicators: ['P/B', 'EV/EBITDA', '週期調整P/E']
                     },
                     profitability: { 
                         weight: 20, 
                         name: '盈利能力', 
-                        indicators: ['ROE週期性', '毛利率穩定性', '營運槓桿'],
-                        qualitative: ['定價能力', '成本彈性', '產能利用率']
+                        indicators: ['ROE週期性', '毛利率穩定性']
                     },
                     growth: { 
                         weight: 10, 
                         name: '成長性', 
-                        indicators: ['產能擴張', '市占率變化', '新市場進入'],
-                        qualitative: ['擴張策略', '技術升級', '產品創新']
+                        indicators: ['產能擴張', '市占率變化']
                     }
                 },
                 valuation: {
-                    pessimistic: { pb: 0.8, desc: 'P/B=0.8x, 週期底部' },
-                    neutral: { pb: 1.2, desc: 'P/B=1.2x, 週期中段' },
-                    optimistic: { pb: 1.8, desc: 'P/B=1.8x, 週期高點' }
+                    pessimistic: { desc: 'P/B=0.8x, 週期底部' },
+                    neutral: { desc: 'P/B=1.2x, 週期中段' },
+                    optimistic: { desc: 'P/B=1.8x, 週期高點' }
                 }
             },
             defensive: {
                 name: '防禦型',
-                baseWeights: { profitability: 35, health: 30, valuation: 25, growth: 10 },
                 modules: {
                     profitability: { 
                         weight: 35, 
                         name: '盈利能力', 
-                        indicators: ['ROE穩定性', '股息率', '淨利率', '自由現金流'],
-                        qualitative: ['商業模式穩定性', '客戶黏性', '定價能力']
+                        indicators: ['ROE穩定性', '股息率', '淨利率']
                     },
                     health: { 
                         weight: 30, 
                         name: '財務健康', 
-                        indicators: ['負債率', '利息覆蓋', '流動比率'],
-                        qualitative: ['財務保守性', '現金管理', '風險控制']
+                        indicators: ['負債率', '利息覆蓋', '流動比率']
                     },
                     valuation: { 
                         weight: 25, 
                         name: '估值', 
-                        indicators: ['股息殖利率', 'P/E', 'Beta係數'],
-                        qualitative: ['市場地位', '品牌價值', '監管保護']
+                        indicators: ['股息殖利率', 'P/E', 'Beta係數']
                     },
                     growth: { 
                         weight: 10, 
                         name: '成長性', 
-                        indicators: ['營收穩定性', '市占率', '客戶黏性'],
-                        qualitative: ['市場擴張', '產品多元化', '技術升級']
+                        indicators: ['營收穩定性', '市占率']
                     }
                 },
                 valuation: {
-                    pessimistic: { yield: 6, desc: '股息殖利率=6%' },
-                    neutral: { yield: 4.5, desc: '股息殖利率=4.5%' },
-                    optimistic: { yield: 3.5, desc: '股息殖利率=3.5%' }
+                    pessimistic: { desc: '股息殖利率=6%' },
+                    neutral: { desc: '股息殖利率=4.5%' },
+                    optimistic: { desc: '股息殖利率=3.5%' }
                 }
             },
             financial: {
                 name: '金融型',
-                baseWeights: { health: 35, profitability: 35, valuation: 20, growth: 10 },
                 modules: {
                     health: { 
                         weight: 35, 
                         name: '財務健康', 
-                        indicators: ['資本適足率', '逾放比', '備抵覆蓋率', '流動性比率'],
-                        qualitative: ['風險管理', '監管合規', '資本管理']
+                        indicators: ['資本適足率', '逾放比', '備抵覆蓋率']
                     },
                     profitability: { 
                         weight: 35, 
                         name: '盈利能力', 
-                        indicators: ['ROE', '淨利差', '成本收入比', '手續費收入比'],
-                        qualitative: ['商業模式', '客戶黏性', '交叉銷售']
+                        indicators: ['ROE', '淨利差', '成本收入比']
                     },
                     valuation: { 
                         weight: 20, 
                         name: '估值', 
-                        indicators: ['P/B', '本益比', '股價淨值比', 'P/TBV'],
-                        qualitative: ['市場地位', '品牌價值', '併購溢價']
+                        indicators: ['P/B', '本益比', '股價淨值比']
                     },
                     growth: { 
                         weight: 10, 
                         name: '成長性', 
-                        indicators: ['放款成長', '存款成長', '新業務收入'],
-                        qualitative: ['數位轉型', '市場擴張', '產品創新']
+                        indicators: ['放款成長', '存款成長']
                     }
                 },
                 valuation: {
-                    pessimistic: { pb: 0.7, desc: 'P/B=0.7x, 利差壓縮+信用風險' },
-                    neutral: { pb: 1.0, desc: 'P/B=1.0x, 穩定經營環境' },
-                    optimistic: { pb: 1.4, desc: 'P/B=1.4x, 利率上升受益' }
+                    pessimistic: { desc: 'P/B=0.7x, 利差壓縮' },
+                    neutral: { desc: 'P/B=1.0x, 穩定經營' },
+                    optimistic: { desc: 'P/B=1.4x, 利率上升受益' }
                 }
             },
             capital: {
                 name: '資本密集型',
-                baseWeights: { health: 35, valuation: 30, profitability: 25, growth: 10 },
                 modules: {
                     health: { 
                         weight: 35, 
                         name: '財務健康', 
-                        indicators: ['負債率', '利息覆蓋', '營運現金流', '資本支出比'],
-                        qualitative: ['債務管理', '現金流穩定性', '資產品質']
+                        indicators: ['負債率', '利息覆蓋', '營運現金流']
                     },
                     valuation: { 
                         weight: 30, 
                         name: '估值', 
-                        indicators: ['P/B', 'EV/EBITDA', 'NAV折價'],
-                        qualitative: ['資產重估潛力', '週期位置', '併購價值']
+                        indicators: ['P/B', 'EV/EBITDA', 'NAV折價']
                     },
                     profitability: { 
                         weight: 25, 
                         name: '盈利能力', 
-                        indicators: ['ROIC', '資產周轉率', '毛利率'],
-                        qualitative: ['營運效率', '成本控制', '定價能力']
+                        indicators: ['ROIC', '資產周轉率']
                     },
                     growth: { 
                         weight: 10, 
                         name: '成長性', 
-                        indicators: ['資產擴張', '租金成長', '入住率'],
-                        qualitative: ['擴張策略', '市場機會', '產品創新']
+                        indicators: ['資產擴張', '租金成長']
                     }
                 },
                 valuation: {
-                    pessimistic: { pb: 0.8, desc: 'P/B=0.8x, 資產減值風險' },
-                    neutral: { pb: 1.2, desc: 'P/B=1.2x, 穩定經營' },
-                    optimistic: { pb: 1.6, desc: 'P/B=1.6x, 資產重估' }
+                    pessimistic: { desc: 'P/B=0.8x, 資產減值風險' },
+                    neutral: { desc: 'P/B=1.2x, 穩定經營' },
+                    optimistic: { desc: 'P/B=1.6x, 資產重估' }
                 }
             },
             consumer: {
                 name: '消費型',
-                baseWeights: { growth: 35, profitability: 30, valuation: 25, health: 10 },
                 modules: {
                     growth: { 
                         weight: 35, 
                         name: '成長性', 
-                        indicators: ['同店成長率', '新品成功率', '通路擴張', '市場份額'],
-                        qualitative: ['品牌力', '創新能力', '市場擴張']
+                        indicators: ['同店成長率', '新品成功率', '通路擴張']
                     },
                     profitability: { 
                         weight: 30, 
                         name: '盈利能力', 
-                        indicators: ['毛利率', 'ROE', '品牌溢價', '存貨周轉'],
-                        qualitative: ['定價能力', '成本控制', '營運效率']
+                        indicators: ['毛利率', 'ROE', '品牌溢價']
                     },
                     valuation: { 
                         weight: 25, 
                         name: '估值', 
-                        indicators: ['P/E', 'EV/EBITDA', '品牌價值倍數'],
-                        qualitative: ['市場預期', '成長持續性', '競爭優勢']
+                        indicators: ['P/E', 'EV/EBITDA']
                     },
                     health: { 
                         weight: 10, 
                         name: '財務健康', 
-                        indicators: ['現金流', '負債率', '營運資金'],
-                        qualitative: ['財務管理', '現金轉換', '資金效率']
+                        indicators: ['現金流', '負債率']
                     }
                 },
                 valuation: {
-                    pessimistic: { pe: 15, desc: 'P/E=15x, 消費萎縮' },
-                    neutral: { pe: 22, desc: 'P/E=22x, 穩健成長' },
-                    optimistic: { pe: 30, desc: 'P/E=30x, 消費升級' }
+                    pessimistic: { desc: 'P/E=15x, 消費萎縮' },
+                    neutral: { desc: 'P/E=22x, 穩健成長' },
+                    optimistic: { desc: 'P/E=30x, 消費升級' }
                 }
             }
         };
         
         let selectedIndustry = null;
-        let selectedEnvironment = null;
         let selectedExchange = 'us';
         let moduleScores = {};
-        let qualitativeScores = {};
-        let marketEnvironment = {};
-        let confidenceLevel = 50;
-        
-        // 數據持久化管理
-        class DataManager {
-            constructor() {
-                this.storageKey = 'investmentAnalysis';
-                this.backupKey = 'investmentBackup';
-            }
-            
-            saveAnalysis(data) {
-                try {
-                    const analysisData = {
-                        ...data,
-                        timestamp: new Date().toISOString(),
-                        version: '2.0'
-                    };
-                    localStorage.setItem(this.storageKey, JSON.stringify(analysisData));
-                    this.createBackup(analysisData);
-                    return true;
-                } catch (error) {
-                    console.error('保存失敗:', error);
-                    return false;
-                }
-            }
-            
-            loadAnalysis() {
-                try {
-                    const data = localStorage.getItem(this.storageKey);
-                    return data ? JSON.parse(data) : null;
-                } catch (error) {
-                    console.error('載入失敗:', error);
-                    return null;
-                }
-            }
-            
-            createBackup(data) {
-                const backups = this.getBackups() || [];
-                backups.push({
-                    data,
-                    timestamp: new Date().toISOString()
-                });
-                
-                if (backups.length > 10) {
-                    backups.splice(0, backups.length - 10);
-                }
-                
-                localStorage.setItem(this.backupKey, JSON.stringify(backups));
-            }
-            
-            getBackups() {
-                try {
-                    const backups = localStorage.getItem(this.backupKey);
-                    return backups ? JSON.parse(backups) : [];
-                } catch (error) {
-                    return [];
-                }
-            }
-            
-            exportAllData() {
-                const currentData = this.loadAnalysis();
-                const backups = this.getBackups();
-                
-                const exportData = {
-                    current: currentData,
-                    backups: backups,
-                    exportDate: new Date().toISOString(),
-                    version: '2.0'
-                };
-                
-                return JSON.stringify(exportData, null, 2);
-            }
-            
-            importData(jsonData) {
-                try {
-                    const data = JSON.parse(jsonData);
-                    if (data.current) {
-                        this.saveAnalysis(data.current);
-                    }
-                    if (data.backups) {
-                        localStorage.setItem(this.backupKey, JSON.stringify(data.backups));
-                    }
-                    return true;
-                } catch (error) {
-                    console.error('導入失敗:', error);
-                    return false;
-                }
-            }
-        }
-        
-        const dataManager = new DataManager();
         
         // 交易所選擇事件
         document.getElementById('exchange').addEventListener('change', function() {
             selectedExchange = this.value;
             updateCurrencyDisplay();
-            updateMarketCapDisplay();
         });
         
         // 更新貨幣顯示
         function updateCurrencyDisplay() {
-            const config = marketConfigs[selectedExchange];
-            if (config) {
-                document.getElementById('currencyDisplay').textContent = config.currency;
-                document.getElementById('marketCapDisplay').textContent = `億${config.currency}`;
-            }
+            const currencies = { us: 'USD', tw: 'TWD', hk: 'HKD', other: 'USD' };
+            const currency = currencies[selectedExchange];
+            document.getElementById('currencyDisplay').textContent = currency;
+            document.getElementById('marketCapDisplay').textContent = `億${currency}`;
         }
-        
-        // 更新市值顯示
-        function updateMarketCapDisplay() {
-            const marketCap = parseFloat(document.getElementById('marketCap').value);
-            const config = marketConfigs[selectedExchange];
-            
-            if (marketCap && config) {
-                let sizeLabel = '';
-                if (marketCap <= config.marketCapLevels.small.max) {
-                    sizeLabel = config.marketCapLevels.small.label;
-                } else if (marketCap <= config.marketCapLevels.mid.max) {
-                    sizeLabel = config.marketCapLevels.mid.label;
-                } else {
-                    sizeLabel = config.marketCapLevels.large.label;
-                }
-                document.getElementById('marketCapSize').textContent = sizeLabel;
-            }
-        }
-        
-        // 市值輸入事件
-        document.getElementById('marketCap').addEventListener('input', updateMarketCapDisplay);
-        
-        // 市場環境選擇事件
-        document.querySelectorAll('.env-card').forEach(card => {
-            card.addEventListener('click', function() {
-                document.querySelectorAll('.env-card').forEach(c => c.classList.remove('selected'));
-                this.classList.add('selected');
-                selectedEnvironment = this.dataset.env;
-                updateDynamicWeights();
-            });
-        });
-        
-        // 市場情緒選擇事件
-        document.querySelectorAll('.sentiment-option').forEach(option => {
-            option.addEventListener('click', function() {
-                document.querySelectorAll('.sentiment-option').forEach(o => o.classList.remove('selected'));
-                this.classList.add('selected');
-                marketEnvironment.sentiment = this.dataset.sentiment;
-                updateRiskAssessment();
-            });
-        });
         
         // 產業選擇事件
         document.querySelectorAll('.industry-card').forEach(card => {
@@ -2227,28 +719,55 @@ ${document.getElementById('recommendation')?.textContent || ''}
                 document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
                 this.classList.add('selected');
                 selectedIndustry = this.dataset.industry;
-                generateEnhancedModules();
-                updateDynamicWeights();
+                generateModules();
             });
         });
         
-        // VIX指數解讀
-        document.getElementById('vixIndex').addEventListener('input', function() {
-            const vix = parseFloat(this.value);
-            const interpretation = document.getElementById('vixInterpretation');
-            if (vix < 20) {
-                interpretation.textContent = '市場平靜';
-                interpretation.style.color = '#16a34a';
-            } else if (vix < 30) {
-                interpretation.textContent = '適度焦慮';
-                interpretation.style.color = '#d97706';
-            } else {
-                interpretation.textContent = '極度恐慌';
-                interpretation.style.color = '#dc2626';
-            }
-        });
+        // 生成評分模組
+        function generateModules() {
+            if (!selectedIndustry) return;
+            
+            const config = industryConfigs[selectedIndustry];
+            const moduleGrid = document.getElementById('moduleGrid');
+            moduleGrid.innerHTML = '';
+            
+            Object.keys(config.modules).forEach(moduleId => {
+                const module = config.modules[moduleId];
+                const moduleDiv = document.createElement('div');
+                moduleDiv.className = 'module';
+                moduleDiv.innerHTML = `
+                    <h3>
+                        ${module.name}
+                        <span class="weight-badge">${module.weight}%</span>
+                    </h3>
+                    <div class="score-display">
+                        <div class="score-circle score-average" id="score-${moduleId}">--</div>
+                    </div>
+                    <div class="indicator-list">
+                        <h4>關鍵指標:</h4>
+                        ${module.indicators.map(indicator => `
+                            <div class="indicator-item">
+                                <span>${indicator}:</span>
+                                <input type="number" 
+                                       placeholder="0-100" 
+                                       min="0" max="100" 
+                                       onchange="updateModuleScore('${moduleId}')"
+                                       data-indicator="${indicator}">
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                moduleGrid.appendChild(moduleDiv);
+            });
+        }
         
-        // 質化分析滑桿事件
-        ['ceoLeadership', 'strategy', 'innovation', 'brandValue'].forEach(id => {
-            const slider = document.getElementById(id);
-            const display = document.getElementById(id.replace(/([A-Z])/g, '') + 'Value') ||
+        // 更新模組評分
+        function updateModuleScore(moduleId) {
+            const moduleDiv = document.querySelector(`#score-${moduleId}`).closest('.module');
+            const inputs = moduleDiv.querySelectorAll('input[type="number"]');
+            let total = 0;
+            let count = 0;
+            
+            inputs.forEach(input => {
+                if (input.value) {
+                    total += parseFloat(input.value);
