@@ -9,11 +9,7 @@
     <title>個人投資分析工具 v2.0</title>
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='80' font-size='80'>📊</text></svg>">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -311,55 +307,30 @@
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
         }
         
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+        .btn-secondary { background: linear-gradient(135deg, #6b7280, #4b5563); color: white; }
+        .btn-success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .btn-warning { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-weight: 500;
         }
         
-        .btn-secondary {
-            background: linear-gradient(135deg, #6b7280, #4b5563);
-            color: white;
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-        }
+        .alert-success { background: linear-gradient(135deg, #d4edda, #c3e6cb); color: #155724; border: 1px solid #c3e6cb; }
+        .alert-warning { background: linear-gradient(135deg, #fff3cd, #ffeaa7); color: #856404; border: 1px solid #ffeaa7; }
+        .alert-danger { background: linear-gradient(135deg, #f8d7da, #f5c6cb); color: #721c24; border: 1px solid #f5c6cb; }
         
         @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-            }
-            
-            h1 {
-                font-size: 1.8em;
-            }
-            
-            .input-group {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            
-            .industry-selector {
-                grid-template-columns: 1fr;
-            }
-            
-            .module-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .valuation-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .action-buttons {
-                grid-template-columns: 1fr;
-            }
+            .container { padding: 15px; }
+            h1 { font-size: 1.8em; }
+            .input-group { grid-template-columns: 1fr; gap: 8px; }
+            .industry-selector { grid-template-columns: 1fr; }
+            .module-grid { grid-template-columns: 1fr; }
+            .valuation-grid { grid-template-columns: 1fr; }
+            .action-buttons { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -367,7 +338,6 @@
     <div class="container">
         <h1>📊 個人投資分析工具 <span class="version-badge">v2.0</span></h1>
         
-        <!-- 基本資訊輸入 -->
         <div class="section">
             <h2>🏢 基本資訊</h2>
             <div class="input-group">
@@ -397,7 +367,6 @@
             </div>
         </div>
         
-        <!-- 產業選擇 -->
         <div class="section">
             <h2>🏭 產業類別選擇</h2>
             <div class="industry-selector">
@@ -428,7 +397,6 @@
             </div>
         </div>
         
-        <!-- 評分模組 -->
         <div class="section">
             <h2>📈 評分模組</h2>
             <div class="module-grid" id="moduleGrid">
@@ -436,16 +404,12 @@
             </div>
         </div>
         
-        <!-- 總評分 -->
         <div class="total-score">
             <h2 id="totalScore">--</h2>
             <p>總評分</p>
-            <div class="recommendation" id="recommendation">
-                請先完成所有評估
-            </div>
+            <div class="recommendation" id="recommendation">請先完成所有評估</div>
         </div>
         
-        <!-- 估值模型 -->
         <div class="section">
             <h2>💰 三情境估值模型</h2>
             <div class="valuation-grid">
@@ -467,7 +431,6 @@
             </div>
         </div>
         
-        <!-- 操作建議 -->
         <div class="section">
             <h2>🎯 操作建議</h2>
             <div id="actionSuggestions">
@@ -475,7 +438,6 @@
             </div>
         </div>
         
-        <!-- 功能按鈕 -->
         <div class="action-buttons">
             <button class="btn-primary" onclick="calculateAnalysis()">🚀 開始分析</button>
             <button class="btn-secondary" onclick="exportReport()">📊 導出報告</button>
@@ -483,7 +445,6 @@
             <button class="btn-warning" onclick="resetAll()">🔄 重設所有</button>
         </div>
         
-        <!-- 手機使用指南 -->
         <div class="section">
             <h2>📱 手機使用指南</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
@@ -496,7 +457,6 @@
                         <li>設定名稱後確認</li>
                     </ol>
                 </div>
-                
                 <div style="padding: 15px; background: linear-gradient(135deg, #fef3c7, #fcd34d); border-radius: 10px;">
                     <h4>🤖 Android 用戶</h4>
                     <ol style="margin: 10px 0; padding-left: 20px;">
@@ -511,31 +471,14 @@
     </div>
     
     <script>
-        // 產業配置
         const industryConfigs = {
             tech: {
                 name: '科技成長型',
                 modules: {
-                    growth: { 
-                        weight: 40, 
-                        name: '成長性', 
-                        indicators: ['營收成長率', '研發費用比', '新產品營收占比', '用戶增長率']
-                    },
-                    profitability: { 
-                        weight: 30, 
-                        name: '盈利能力', 
-                        indicators: ['毛利率', 'ROE', 'ROA', '淨利率']
-                    },
-                    valuation: { 
-                        weight: 20, 
-                        name: '估值', 
-                        indicators: ['PEG', 'P/S', 'EV/Revenue']
-                    },
-                    health: { 
-                        weight: 10, 
-                        name: '財務健康', 
-                        indicators: ['現金比', '負債率', '流動比率']
-                    }
+                    growth: { weight: 40, name: '成長性', indicators: ['營收成長率', '研發費用比', '新產品營收占比', '用戶增長率'] },
+                    profitability: { weight: 30, name: '盈利能力', indicators: ['毛利率', 'ROE', 'ROA', '淨利率'] },
+                    valuation: { weight: 20, name: '估值', indicators: ['PEG', 'P/S', 'EV/Revenue'] },
+                    health: { weight: 10, name: '財務健康', indicators: ['現金比', '負債率', '流動比率'] }
                 },
                 valuation: {
                     pessimistic: { desc: 'P/E=15x, 利率上升+競爭加劇' },
@@ -546,26 +489,10 @@
             cyclical: {
                 name: '週期型',
                 modules: {
-                    health: { 
-                        weight: 40, 
-                        name: '財務健康', 
-                        indicators: ['負債率', '現金比', '營運現金流', '淨現金比率']
-                    },
-                    valuation: { 
-                        weight: 30, 
-                        name: '估值', 
-                        indicators: ['P/B', 'EV/EBITDA', '週期調整P/E']
-                    },
-                    profitability: { 
-                        weight: 20, 
-                        name: '盈利能力', 
-                        indicators: ['ROE週期性', '毛利率穩定性']
-                    },
-                    growth: { 
-                        weight: 10, 
-                        name: '成長性', 
-                        indicators: ['產能擴張', '市占率變化']
-                    }
+                    health: { weight: 40, name: '財務健康', indicators: ['負債率', '現金比', '營運現金流', '淨現金比率'] },
+                    valuation: { weight: 30, name: '估值', indicators: ['P/B', 'EV/EBITDA', '週期調整P/E'] },
+                    profitability: { weight: 20, name: '盈利能力', indicators: ['ROE週期性', '毛利率穩定性'] },
+                    growth: { weight: 10, name: '成長性', indicators: ['產能擴張', '市占率變化'] }
                 },
                 valuation: {
                     pessimistic: { desc: 'P/B=0.8x, 週期底部' },
@@ -576,26 +503,10 @@
             defensive: {
                 name: '防禦型',
                 modules: {
-                    profitability: { 
-                        weight: 35, 
-                        name: '盈利能力', 
-                        indicators: ['ROE穩定性', '股息率', '淨利率']
-                    },
-                    health: { 
-                        weight: 30, 
-                        name: '財務健康', 
-                        indicators: ['負債率', '利息覆蓋', '流動比率']
-                    },
-                    valuation: { 
-                        weight: 25, 
-                        name: '估值', 
-                        indicators: ['股息殖利率', 'P/E', 'Beta係數']
-                    },
-                    growth: { 
-                        weight: 10, 
-                        name: '成長性', 
-                        indicators: ['營收穩定性', '市占率']
-                    }
+                    profitability: { weight: 35, name: '盈利能力', indicators: ['ROE穩定性', '股息率', '淨利率'] },
+                    health: { weight: 30, name: '財務健康', indicators: ['負債率', '利息覆蓋', '流動比率'] },
+                    valuation: { weight: 25, name: '估值', indicators: ['股息殖利率', 'P/E', 'Beta係數'] },
+                    growth: { weight: 10, name: '成長性', indicators: ['營收穩定性', '市占率'] }
                 },
                 valuation: {
                     pessimistic: { desc: '股息殖利率=6%' },
@@ -606,26 +517,10 @@
             financial: {
                 name: '金融型',
                 modules: {
-                    health: { 
-                        weight: 35, 
-                        name: '財務健康', 
-                        indicators: ['資本適足率', '逾放比', '備抵覆蓋率']
-                    },
-                    profitability: { 
-                        weight: 35, 
-                        name: '盈利能力', 
-                        indicators: ['ROE', '淨利差', '成本收入比']
-                    },
-                    valuation: { 
-                        weight: 20, 
-                        name: '估值', 
-                        indicators: ['P/B', '本益比', '股價淨值比']
-                    },
-                    growth: { 
-                        weight: 10, 
-                        name: '成長性', 
-                        indicators: ['放款成長', '存款成長']
-                    }
+                    health: { weight: 35, name: '財務健康', indicators: ['資本適足率', '逾放比', '備抵覆蓋率'] },
+                    profitability: { weight: 35, name: '盈利能力', indicators: ['ROE', '淨利差', '成本收入比'] },
+                    valuation: { weight: 20, name: '估值', indicators: ['P/B', '本益比', '股價淨值比'] },
+                    growth: { weight: 10, name: '成長性', indicators: ['放款成長', '存款成長'] }
                 },
                 valuation: {
                     pessimistic: { desc: 'P/B=0.7x, 利差壓縮' },
@@ -636,26 +531,10 @@
             capital: {
                 name: '資本密集型',
                 modules: {
-                    health: { 
-                        weight: 35, 
-                        name: '財務健康', 
-                        indicators: ['負債率', '利息覆蓋', '營運現金流']
-                    },
-                    valuation: { 
-                        weight: 30, 
-                        name: '估值', 
-                        indicators: ['P/B', 'EV/EBITDA', 'NAV折價']
-                    },
-                    profitability: { 
-                        weight: 25, 
-                        name: '盈利能力', 
-                        indicators: ['ROIC', '資產周轉率']
-                    },
-                    growth: { 
-                        weight: 10, 
-                        name: '成長性', 
-                        indicators: ['資產擴張', '租金成長']
-                    }
+                    health: { weight: 35, name: '財務健康', indicators: ['負債率', '利息覆蓋', '營運現金流'] },
+                    valuation: { weight: 30, name: '估值', indicators: ['P/B', 'EV/EBITDA', 'NAV折價'] },
+                    profitability: { weight: 25, name: '盈利能力', indicators: ['ROIC', '資產周轉率'] },
+                    growth: { weight: 10, name: '成長性', indicators: ['資產擴張', '租金成長'] }
                 },
                 valuation: {
                     pessimistic: { desc: 'P/B=0.8x, 資產減值風險' },
@@ -666,26 +545,10 @@
             consumer: {
                 name: '消費型',
                 modules: {
-                    growth: { 
-                        weight: 35, 
-                        name: '成長性', 
-                        indicators: ['同店成長率', '新品成功率', '通路擴張']
-                    },
-                    profitability: { 
-                        weight: 30, 
-                        name: '盈利能力', 
-                        indicators: ['毛利率', 'ROE', '品牌溢價']
-                    },
-                    valuation: { 
-                        weight: 25, 
-                        name: '估值', 
-                        indicators: ['P/E', 'EV/EBITDA']
-                    },
-                    health: { 
-                        weight: 10, 
-                        name: '財務健康', 
-                        indicators: ['現金流', '負債率']
-                    }
+                    growth: { weight: 35, name: '成長性', indicators: ['同店成長率', '新品成功率', '通路擴張'] },
+                    profitability: { weight: 30, name: '盈利能力', indicators: ['毛利率', 'ROE', '品牌溢價'] },
+                    valuation: { weight: 25, name: '估值', indicators: ['P/E', 'EV/EBITDA'] },
+                    health: { weight: 10, name: '財務健康', indicators: ['現金流', '負債率'] }
                 },
                 valuation: {
                     pessimistic: { desc: 'P/E=15x, 消費萎縮' },
@@ -695,17 +558,14 @@
             }
         };
         
-        let selectedIndustry = null;
-        let selectedExchange = 'us';
-        let moduleScores = {};
+        let selectedIndustry = null, selectedExchange = 'us', moduleScores = {};
         
-        // 交易所選擇事件
+        document.addEventListener('DOMContentLoaded', () => updateCurrencyDisplay());
         document.getElementById('exchange').addEventListener('change', function() {
             selectedExchange = this.value;
             updateCurrencyDisplay();
         });
         
-        // 更新貨幣顯示
         function updateCurrencyDisplay() {
             const currencies = { us: 'USD', tw: 'TWD', hk: 'HKD', other: 'USD' };
             const currency = currencies[selectedExchange];
@@ -713,7 +573,6 @@
             document.getElementById('marketCapDisplay').textContent = `億${currency}`;
         }
         
-        // 產業選擇事件
         document.querySelectorAll('.industry-card').forEach(card => {
             card.addEventListener('click', function() {
                 document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
@@ -723,23 +582,19 @@
             });
         });
         
-        // 生成評分模組
         function generateModules() {
             if (!selectedIndustry) return;
-            
             const config = industryConfigs[selectedIndustry];
             const moduleGrid = document.getElementById('moduleGrid');
             moduleGrid.innerHTML = '';
+            moduleScores = {};
             
             Object.keys(config.modules).forEach(moduleId => {
                 const module = config.modules[moduleId];
                 const moduleDiv = document.createElement('div');
                 moduleDiv.className = 'module';
                 moduleDiv.innerHTML = `
-                    <h3>
-                        ${module.name}
-                        <span class="weight-badge">${module.weight}%</span>
-                    </h3>
+                    <h3>${module.name}<span class="weight-badge">${module.weight}%</span></h3>
                     <div class="score-display">
                         <div class="score-circle score-average" id="score-${moduleId}">--</div>
                     </div>
@@ -748,11 +603,8 @@
                         ${module.indicators.map(indicator => `
                             <div class="indicator-item">
                                 <span>${indicator}:</span>
-                                <input type="number" 
-                                       placeholder="0-100" 
-                                       min="0" max="100" 
-                                       onchange="updateModuleScore('${moduleId}')"
-                                       data-indicator="${indicator}">
+                                <input type="number" placeholder="0-100" min="0" max="100" 
+                                       onchange="updateModuleScore('${moduleId}')" data-indicator="${indicator}">
                             </div>
                         `).join('')}
                     </div>
@@ -761,13 +613,242 @@
             });
         }
         
-        // 更新模組評分
         function updateModuleScore(moduleId) {
             const moduleDiv = document.querySelector(`#score-${moduleId}`).closest('.module');
             const inputs = moduleDiv.querySelectorAll('input[type="number"]');
-            let total = 0;
-            let count = 0;
+            let total = 0, count = 0;
             
             inputs.forEach(input => {
-                if (input.value) {
+                if (input.value && input.value !== '') {
                     total += parseFloat(input.value);
+                    count++;
+                }
+            });
+            
+            if (count > 0) {
+                const average = total / count;
+                moduleScores[moduleId] = average;
+                const scoreCircle = document.getElementById(`score-${moduleId}`);
+                scoreCircle.textContent = Math.round(average);
+                scoreCircle.className = 'score-circle ' + getScoreClass(average);
+            } else {
+                delete moduleScores[moduleId];
+                const scoreCircle = document.getElementById(`score-${moduleId}`);
+                scoreCircle.textContent = '--';
+                scoreCircle.className = 'score-circle score-average';
+            }
+            calculateTotalScore();
+        }
+        
+        function getScoreClass(score) {
+            if (score >= 80) return 'score-excellent';
+            if (score >= 70) return 'score-good';
+            if (score >= 50) return 'score-average';
+            return 'score-poor';
+        }
+        
+        function calculateTotalScore() {
+            if (!selectedIndustry || Object.keys(moduleScores).length === 0) {
+                document.getElementById('totalScore').textContent = '--';
+                document.getElementById('recommendation').textContent = '請先完成所有評估';
+                document.getElementById('recommendation').className = 'recommendation';
+                return;
+            }
+            
+            const config = industryConfigs[selectedIndustry];
+            let weightedSum = 0, totalWeight = 0;
+            
+            Object.keys(moduleScores).forEach(moduleId => {
+                const weight = config.modules[moduleId].weight;
+                weightedSum += moduleScores[moduleId] * weight;
+                totalWeight += weight;
+            });
+            
+            const totalScore = Math.round(weightedSum / totalWeight);
+            document.getElementById('totalScore').textContent = totalScore;
+            updateRecommendation(totalScore);
+            updateValuation(totalScore);
+        }
+        
+        function updateRecommendation(score) {
+            const recElement = document.getElementById('recommendation');
+            if (score >= 80) {
+                recElement.textContent = '🚀 強烈買入 - 優質標的，建議積極配置';
+                recElement.className = 'recommendation rec-buy';
+            } else if (score >= 70) {
+                recElement.textContent = '📈 買入 - 基本面良好，可以考慮投資';
+                recElement.className = 'recommendation rec-buy';
+            } else if (score >= 50) {
+                recElement.textContent = '🤔 持有 - 中性評價，建議觀望';
+                recElement.className = 'recommendation rec-hold';
+            } else if (score >= 30) {
+                recElement.textContent = '⚠️ 減持 - 風險偏高，建議謹慎';
+                recElement.className = 'recommendation rec-sell';
+            } else {
+                recElement.textContent = '❌ 賣出 - 基本面較差，建議回避';
+                recElement.className = 'recommendation rec-sell';
+            }
+        }
+        
+        function updateValuation(score) {
+            const currentPrice = parseFloat(document.getElementById('currentPrice').value) || 0;
+            if (!currentPrice || !selectedIndustry) return;
+            
+            const config = industryConfigs[selectedIndustry];
+            const adjustment = (score - 50) / 100;
+            const baseMultipliers = { pessimistic: 0.8, neutral: 1.0, optimistic: 1.3 };
+            
+            Object.keys(baseMultipliers).forEach(scenario => {
+                const multiplier = baseMultipliers[scenario] * (1 + adjustment);
+                const estimatedPrice = currentPrice * multiplier;
+                document.getElementById(`${scenario}Price`).textContent = `${estimatedPrice.toFixed(2)}`;
+                document.getElementById(`${scenario}Assumption`).textContent = config.valuation[scenario].desc;
+            });
+        }
+        
+        function calculateAnalysis() {
+            if (!selectedIndustry) return showAlert('請先選擇產業類別', 'warning');
+            const stockCode = document.getElementById('stockCode').value;
+            const currentPrice = document.getElementById('currentPrice').value;
+            if (!stockCode || !currentPrice) return showAlert('請填寫股票代碼和當前股價', 'warning');
+            if (Object.keys(moduleScores).length === 0) return showAlert('請先為各項指標評分', 'warning');
+            
+            calculateTotalScore();
+            generateActionSuggestions();
+            showAlert('分析完成！', 'success');
+        }
+        
+        function generateActionSuggestions() {
+            const totalScore = parseInt(document.getElementById('totalScore').textContent);
+            const suggestionsDiv = document.getElementById('actionSuggestions');
+            if (isNaN(totalScore)) return suggestionsDiv.innerHTML = '<p>請完成評分後查看操作建議</p>';
+            
+            let suggestions = '';
+            if (totalScore >= 80) {
+                suggestions = `<div class="alert alert-success"><h4>💎 優質投資標的</h4><ul><li>建議分批建倉，目標配置 15-20%</li><li>可考慮逢低加碼機會</li><li>設定止盈點：當前價格 +30%</li><li>設定止損點：當前價格 -15%</li></ul></div>`;
+            } else if (totalScore >= 70) {
+                suggestions = `<div class="alert alert-success"><h4>📈 值得投資標的</h4><ul><li>建議適度配置，目標配置 10-15%</li><li>密切關注基本面變化</li><li>設定止盈點：當前價格 +25%</li><li>設定止損點：當前價格 -12%</li></ul></div>`;
+            } else if (totalScore >= 50) {
+                suggestions = `<div class="alert alert-warning"><h4>🤔 中性觀望標的</h4><ul><li>建議小倉位試探，配置不超過 5%</li><li>等待更好的進場時機</li><li>密切關注產業動向</li><li>設定較緊的止損：當前價格 -8%</li></ul></div>`;
+            } else {
+                suggestions = `<div class="alert alert-danger"><h4>⚠️ 高風險標的</h4><ul><li>建議回避或減持</li><li>如已持有，考慮分批出場</li><li>等待基本面明顯改善</li><li>設定嚴格止損：當前價格 -5%</li></ul></div>`;
+            }
+            suggestionsDiv.innerHTML = suggestions;
+        }
+        
+        function exportReport() {
+            if (!selectedIndustry || Object.keys(moduleScores).length === 0) return showAlert('請先完成分析', 'warning');
+            
+            const stockCode = document.getElementById('stockCode').value || '未填寫';
+            const currentPrice = document.getElementById('currentPrice').value || '未填寫';
+            const totalScore = document.getElementById('totalScore').textContent;
+            const recommendation = document.getElementById('recommendation').textContent;
+            
+            const report = `投資分析報告\n=================\n股票代碼: ${stockCode}\n當前股價: ${currentPrice}\n產業類別: ${industryConfigs[selectedIndustry].name}\n分析日期: ${new Date().toLocaleDateString('zh-TW')}\n\n評分結果:\n${Object.keys(moduleScores).map(moduleId => {
+                const moduleName = industryConfigs[selectedIndustry].modules[moduleId].name;
+                const score = moduleScores[moduleId];
+                return `${moduleName}: ${Math.round(score)}分`;
+            }).join('\n')}\n\n總評分: ${totalScore}分\n投資建議: ${recommendation}\n\n估值區間:\n悲觀情境: ${document.getElementById('pessimisticPrice').textContent}\n中立情境: ${document.getElementById('neutralPrice').textContent}\n樂觀情境: ${document.getElementById('optimisticPrice').textContent}\n\n報告生成時間: ${new Date().toLocaleString('zh-TW')}`;
+            
+            const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `投資分析報告_${stockCode}_${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showAlert('報告已導出！', 'success');
+        }
+        
+        function saveData() {
+            const data = {
+                exchange: selectedExchange,
+                stockCode: document.getElementById('stockCode').value,
+                currentPrice: document.getElementById('currentPrice').value,
+                marketCap: document.getElementById('marketCap').value,
+                selectedIndustry: selectedIndustry,
+                moduleScores: moduleScores,
+                savedAt: new Date().toISOString()
+            };
+            
+            try {
+                const dataStr = JSON.stringify(data);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `投資分析數據_${data.stockCode || 'unknown'}_${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+                showAlert('數據已保存！', 'success');
+            } catch (error) {
+                showAlert('保存失敗：' + error.message, 'danger');
+            }
+        }
+        
+        function resetAll() {
+            if (confirm('確定要重設所有數據嗎？此操作無法復原。')) {
+                document.getElementById('exchange').value = 'us';
+                document.getElementById('stockCode').value = '';
+                document.getElementById('currentPrice').value = '';
+                document.getElementById('marketCap').value = '';
+                document.querySelectorAll('.industry-card').forEach(c => c.classList.remove('selected'));
+                selectedIndustry = null;
+                moduleScores = {};
+                document.getElementById('moduleGrid').innerHTML = '<p style="text-align: center; color: #6b7280; padding: 40px;">請先選擇產業類別以顯示評分模組</p>';
+                document.getElementById('totalScore').textContent = '--';
+                document.getElementById('recommendation').textContent = '請先完成所有評估';
+                document.getElementById('recommendation').className = 'recommendation';
+                ['pessimistic', 'neutral', 'optimistic'].forEach(scenario => {
+                    document.getElementById(`${scenario}Price`).textContent = '--';
+                    document.getElementById(`${scenario}Assumption`).textContent = '--';
+                });
+                document.getElementById('actionSuggestions').innerHTML = '<p>請完成評分後查看操作建議</p>';
+                updateCurrencyDisplay();
+                showAlert('已重設所有數據', 'success');
+            }
+        }
+        
+        function showAlert(message, type = 'success') {
+            const existingAlert = document.querySelector('.temp-alert');
+            if (existingAlert) existingAlert.remove();
+            
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type} temp-alert`;
+            alert.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);';
+            alert.textContent = message;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => { if (alert.parentNode) alert.remove(); }, 3000);
+        }
+        
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 's': e.preventDefault(); saveData(); break;
+                    case 'r': if (e.shiftKey) { e.preventDefault(); resetAll(); } break;
+                    case 'Enter': e.preventDefault(); calculateAnalysis(); break;
+                }
+            }
+        });
+        
+        function validateInputs() {
+            const stockCode = document.getElementById('stockCode').value;
+            const currentPrice = document.getElementById('currentPrice').value;
+            
+            if (stockCode && !/^[A-Za-z0-9.]+$/.test(stockCode)) {
+                showAlert('股票代碼格式不正確', 'warning');
+                return false;
+            }
+            if (currentPrice && (isNaN(currentPrice) || parseFloat(currentPrice) <= 0)) {
+                showAlert('請輸入有效的股價', 'warning');
+                return false;
+            }
+            return true;
+        }
+        
+        document.getElementById('stockCode').addEventListener('blur', validateInputs);
+        document.getElementById('currentPrice').addEventListener('blur', validateInputs);
+    </script>
+</body>
+</html>
